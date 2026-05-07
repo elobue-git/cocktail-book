@@ -1,0 +1,1702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Cocktail Book</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0c0a;
+    --surface: #1a1612;
+    --surface2: #231e19;
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --amber: #d4681e;
+    --text: #f0e8dc;
+    --text-dim: #8a7e72;
+    --border: #2e2820;
+    --tag-bg: #2a2218;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  header {
+    text-align: center;
+    padding: 60px 24px 40px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 2px;
+    background: var(--gold);
+  }
+
+  .header-eyebrow {
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 16px;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.1;
+    margin-bottom: 8px;
+  }
+
+  h1 em {
+    font-style: italic;
+    color: var(--gold-light);
+  }
+
+  .header-count {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-top: 12px;
+  }
+
+  /* Controls */
+  .controls {
+    max-width: 900px;
+    margin: 36px auto 0;
+    padding: 0 24px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .search-wrap {
+    flex: 1;
+    min-width: 200px;
+    position: relative;
+  }
+
+  .search-wrap svg {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dim);
+    pointer-events: none;
+  }
+
+  input[type="search"] {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    padding: 11px 14px 11px 40px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input[type="search"]:focus { border-color: var(--gold); }
+  input[type="search"]::placeholder { color: var(--text-dim); }
+
+  .filter-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    padding: 11px 16px;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .filter-btn:hover, .filter-btn.active {
+    border-color: var(--gold);
+    color: var(--gold);
+    background: var(--tag-bg);
+  }
+
+  /* Grid */
+  .grid {
+    max-width: 900px;
+    margin: 32px auto 60px;
+    padding: 0 24px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
+  }
+
+  /* Card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  .card:hover {
+    transform: translateY(-3px);
+    border-color: var(--gold);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-top {
+    padding: 22px 22px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .card-spirit {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+
+  .card-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 400;
+    line-height: 1.2;
+  }
+
+  .card-body {
+    padding: 16px 22px 20px;
+  }
+
+  .card-ingredients {
+    list-style: none;
+    margin-bottom: 14px;
+  }
+
+  .card-ingredients li {
+    font-size: 13px;
+    color: var(--text-dim);
+    padding: 3px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .card-ingredients li:last-child { border-bottom: none; }
+
+  .ing-amount {
+    color: var(--gold-light);
+    font-weight: 500;
+    white-space: nowrap;
+    font-size: 12px;
+  }
+
+  .card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 12px;
+  }
+
+  .tag {
+    background: var(--tag-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 3px 8px;
+  }
+
+  .card-method {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-style: italic;
+    margin-top: 10px;
+    line-height: 1.5;
+  }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(4px);
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .modal {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    max-width: 480px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    transform: scale(0.95);
+    transition: transform 0.25s;
+  }
+
+  .modal-overlay.open .modal { transform: scale(1); }
+
+  .modal-header {
+    padding: 28px 28px 20px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--surface2);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .modal-spirit {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 6px;
+  }
+
+  .modal-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 400;
+  }
+
+  .modal-close {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    color: var(--text-dim);
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 18px;
+    line-height: 1;
+    transition: all 0.2s;
+  }
+
+  .modal-close:hover { border-color: var(--gold); color: var(--gold); }
+
+  .modal-body { padding: 24px 28px 32px; }
+
+  .modal-section-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 12px;
+    margin-top: 24px;
+  }
+
+  .modal-section-label:first-child { margin-top: 0; }
+
+  .modal-ingredients {
+    list-style: none;
+  }
+
+  .modal-ingredients li {
+    display: flex;
+    justify-content: space-between;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    gap: 12px;
+  }
+
+  .modal-ingredients li:last-child { border-bottom: none; }
+
+  .modal-amount {
+    color: var(--gold-light);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .modal-method {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.7;
+  }
+
+  .modal-notes {
+    font-size: 13px;
+    color: var(--text-dim);
+    font-style: italic;
+    line-height: 1.6;
+    background: var(--tag-bg);
+    border-left: 2px solid var(--gold);
+    padding: 12px 16px;
+    border-radius: 0 6px 6px 0;
+  }
+
+  .no-results {
+    text-align: center;
+    padding: 60px 24px;
+    color: var(--text-dim);
+    font-style: italic;
+    grid-column: 1/-1;
+  }
+
+  .divider {
+    width: 40px;
+    height: 1px;
+    background: var(--gold);
+    margin: 8px 0 0;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-eyebrow">Personal Collection</div>
+  <h1>My <em>Cocktail</em> Book</h1>
+  <div class="divider" style="margin: 16px auto 0;"></div>
+  <p class="header-count" id="count"></p>
+</header>
+
+<div class="controls">
+  <div class="search-wrap">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="search" id="search" placeholder="Search drinks or ingredients…">
+  </div>
+  <button class="filter-btn active" data-filter="all">All</button>
+  <button class="filter-btn" data-filter="rum">Rum</button>
+  <button class="filter-btn" data-filter="tequila">Tequila</button>
+  <button class="filter-btn" data-filter="gin">Gin</button>
+  <button class="filter-btn" data-filter="whiskey">Whiskey</button>
+  <button class="filter-btn" data-filter="tiki">Tiki</button>
+  <button class="filter-btn" data-filter="stirred">Stirred</button>
+  <button class="filter-btn" data-filter="mezcal">Mezcal</button>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-spirit" id="mSpirit"></div>
+        <div class="modal-name" id="mName"></div>
+      </div>
+      <button class="modal-close" id="modalClose">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section-label">Ingredients</div>
+      <ul class="modal-ingredients" id="mIngredients"></ul>
+      <div id="mMethodWrap" style="display:none">
+        <div class="modal-section-label">Method</div>
+        <p class="modal-method" id="mMethod"></p>
+      </div>
+      <div id="mNotesWrap" style="display:none">
+        <div class="modal-section-label">Notes</div>
+        <p class="modal-notes" id="mNotes"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const recipes = [
+  {
+    name: "Mai Tai",
+    spirit: "Rum",
+    tags: ["rum", "tiki"],
+    ingredients: [
+      { amount: "45 ml", name: "Aged rum" },
+      { amount: "15 ml", name: "Orange curaçao" },
+      { amount: "15 ml", name: "Lime juice" },
+      { amount: "10 ml", name: "Orgeat" },
+      { amount: "10 ml", name: "Simple syrup" }
+    ],
+    method: "Shake all with ice. Strain over fresh ice.",
+    notes: "Classic tiki staple. Garnish with mint sprig and lime wheel."
+  },
+  {
+    name: "Zombie",
+    spirit: "Rum",
+    tags: ["rum", "tiki"],
+    ingredients: [
+      { amount: "45 ml", name: "Light rum" },
+      { amount: "45 ml", name: "Dark rum" },
+      { amount: "30 ml", name: "Pineapple juice" },
+      { amount: "15 ml", name: "Lime juice" },
+      { amount: "15 ml", name: "Grenadine" }
+    ],
+    method: "Shake all with ice. Strain over crushed ice.",
+    notes: "Tiki classic. Handle with care — potent."
+  },
+  {
+    name: "Painkiller",
+    spirit: "Rum",
+    tags: ["rum", "tiki"],
+    ingredients: [
+      { amount: "60 ml", name: "Dark rum" },
+      { amount: "90 ml", name: "Pineapple juice" },
+      { amount: "30 ml", name: "Orange juice" },
+      { amount: "30 ml", name: "Coconut cream" }
+    ],
+    method: "Shake all with ice. Serve over crushed ice. Dust with nutmeg.",
+    notes: "Grate fresh nutmeg on top — it matters."
+  },
+  {
+    name: "Jungle Bird",
+    spirit: "Rum",
+    tags: ["rum", "tiki"],
+    ingredients: [
+      { amount: "45 ml", name: "Dark rum" },
+      { amount: "25 ml", name: "Pineapple juice" },
+      { amount: "15 ml", name: "Lime juice" },
+      { amount: "15 ml", name: "Campari" },
+      { amount: "10 ml", name: "Simple syrup" }
+    ],
+    method: "Shake all with ice. Strain over ice into tiki mug.",
+    notes: "Campari gives a bitter edge that balances the sweetness beautifully. Alternate spec (via @philsdrinks): 45ml Jamaican rum / 22.5ml Campari / 45ml pineapple / 15ml lime / 15ml simple syrup."
+  },
+  {
+    name: "Scorpion",
+    spirit: "Rum",
+    tags: ["rum", "tiki"],
+    ingredients: [
+      { amount: "45 ml", name: "Rum" },
+      { amount: "30 ml", name: "Orange juice" },
+      { amount: "20 ml", name: "Lemon juice" },
+      { amount: "10 ml", name: "Orgeat" }
+    ],
+    method: "Shake all with ice. Strain into coupe over crushed ice.",
+    notes: "Garnish with orange slice, orchid, and mint."
+  },
+  {
+    name: "Navy Grog",
+    spirit: "Rum",
+    tags: ["rum", "tiki"],
+    ingredients: [
+      { amount: "60 ml", name: "Rum (blend)" },
+      { amount: "20 ml", name: "Lime juice" },
+      { amount: "20 ml", name: "Grapefruit juice" },
+      { amount: "10 ml", name: "Honey syrup" }
+    ],
+    method: "Shake all with ice. Strain over crushed ice.",
+    notes: "Use a blend of rums for best results."
+  },
+  {
+    name: "Cora Middleton",
+    spirit: "Rum",
+    tags: ["rum"],
+    ingredients: [
+      { amount: "2 oz / 60 ml", name: "Jamaican rum" },
+      { amount: "¾ oz / 22.5 ml", name: "Fresh lemon juice" },
+      { amount: "¾ oz / 22.5 ml", name: "Grenadine" },
+      { amount: "1 tsp / 5 ml", name: "Simple syrup" },
+      { amount: "1", name: "Egg white (or other foamer)" }
+    ],
+    method: "Shake all with ice. Strain into coupe.",
+    notes: "A Clover Club twist with Jamaican rum. From Old Waldorf Bar Days (1931). Rum brings funk; egg white gives it silky texture. Adjust sweetness to your palate. Via @anatomyofadrink."
+  },
+  {
+    name: "Flamingo",
+    spirit: "Rum",
+    tags: ["rum"],
+    ingredients: [
+      { amount: "2 oz / 60 ml", name: "Aged rum" },
+      { amount: "1 oz / 30 ml", name: "Pineapple juice" },
+      { amount: "¼ oz / 7.5 ml", name: "Fresh lime juice" },
+      { amount: "½ oz / 15 ml", name: "Grenadine" }
+    ],
+    method: "Shake all with ice. Double strain into chilled coupe.",
+    notes: "A daiquiri worth reshaking. Originated ~1951 at The Flamingo Hotel in Las Vegas. Pineapple daiquiri base with grenadine for blush color and depth. Via @anatomyofadrink."
+  },
+  {
+    name: "Infante",
+    spirit: "Tequila",
+    tags: ["tequila"],
+    ingredients: [
+      { amount: "2 oz", name: "Tequila blanco" },
+      { amount: "¾ oz", name: "Fresh lime juice" },
+      { amount: "¾ oz", name: "Orgeat" },
+      { amount: "2 dashes", name: "Rose water" },
+      { amount: "to garnish", name: "Nutmeg" }
+    ],
+    method: "Shake all with ice. Strain into rocks glass over large ice cube.",
+    notes: "Daily Cocktail Series. Grate nutmeg on top. Via @anatomyofadrink."
+  },
+  {
+    name: "Campari Margarita",
+    spirit: "Tequila",
+    tags: ["tequila"],
+    ingredients: [
+      { amount: "1.5 oz", name: "Tequila" },
+      { amount: "¾ oz", name: "Cointreau" },
+      { amount: "1 oz", name: "Campari" },
+      { amount: "1 oz", name: "Lime juice" }
+    ],
+    method: "Add to shaker, fill with ice, and shake. Strain into a salt-rimmed glass filled with ice.",
+    notes: "Via @brookebonarrigo. The Campari replaces some of the sweetness with a bitter edge — works surprisingly well."
+  },
+  {
+    name: "The Business",
+    spirit: "Gin",
+    tags: ["gin"],
+    ingredients: [
+      { amount: "1¾ oz", name: "Gin" },
+      { amount: "¾ oz", name: "Fresh lime juice" },
+      { amount: "¾ oz", name: "Pineapple juice" },
+      { amount: "½ oz", name: "Honey syrup" }
+    ],
+    method: "Shake all with ice. Double strain into chilled coupe.",
+    notes: "Created by Zachary Gelnaw-Rubin at the now-closed Lion Lion in New York City. A riff on The Business by Sasha Petraske, itself a variation on the Gimlet. Pineapple adds a tropical note and frothy mouthfeel. Via @anatomyofadrink / The Madrusan Cocktail Companion."
+  },
+  {
+    name: "Part-Time Lover",
+    spirit: "Tequila",
+    tags: ["tequila"],
+    ingredients: [
+      { amount: "1½ oz", name: "Tequila blanco" },
+      { amount: "½ oz", name: "Aperol" },
+      { amount: "½ oz", name: "Elderflower liqueur" },
+      { amount: "¾ oz", name: "Fresh lemon juice" },
+      { amount: "2 dashes", name: "Angostura bitters" }
+    ],
+    method: "Shake all with ice. Strain into rocks glass over ice.",
+    notes: "Via @anatomyofadrink. \"This part-time lover has full-time flavor.\""
+  },
+  {
+    name: "Boukman Daiquiri",
+    spirit: "Rum",
+    tags: ["rum"],
+    ingredients: [
+      { amount: "1½ oz / 45 ml", name: "Light rum" },
+      { amount: "½ oz / 15 ml", name: "Cognac" },
+      { amount: "¾ oz / 22.5 ml", name: "Fresh lime juice" },
+      { amount: "¾ oz / 22.5 ml", name: "Cinnamon syrup" }
+    ],
+    method: "Shake all with ice. Double strain into chilled coupe. Garnish with cinnamon stick.",
+    notes: "Created by Alex Day at Death & Co (2008). Named after Dutty Boukman, a Haitian priest who led the 1791 slave revolt. Split rum/cognac base — lime cuts through the cinnamon and cognac for an unexpected astringency that keeps it light. Via @anatomyofadrink."
+  },
+  {
+    name: "Champagne Daiquiri",
+    spirit: "Rum",
+    tags: ["rum"],
+    ingredients: [
+      { amount: "1½ oz", name: "Aged rum" },
+      { amount: "¾ oz", name: "Fresh lime juice" },
+      { amount: "½ oz", name: "Simple syrup" },
+      { amount: "2 dashes", name: "Angostura bitters" },
+      { amount: "6–8", name: "Mint leaves" }
+    ],
+    method: "Shake all with ice. Double strain into chilled coupe.",
+    notes: "Via @anatomyofadrink. Name may be incorrect — caption cut off at 'One of my FAVORITE champagne…' Update if you know the actual name."
+  },
+  {
+    name: "Pineapple Aperol Daiquiri",
+    spirit: "Rum",
+    tags: ["rum"],
+    ingredients: [
+      { amount: "45 ml / 1.5 oz", name: "Rum" },
+      { amount: "15 ml / 0.5 oz", name: "Aperol" },
+      { amount: "30 ml / 1 oz", name: "Pineapple juice" },
+      { amount: "15 ml / 0.5 oz", name: "Lime juice" },
+      { amount: "15 ml / 0.5 oz", name: "Simple syrup" }
+    ],
+    method: "Shake all with ice. Double strain into chilled coupe. Garnish with pineapple leaves.",
+    notes: "By @gin_with_me via @aboutdrinksandbars. Aperol adds a bitter-citrus edge to the classic daiquiri template."
+  },
+  {
+    name: "Monte Carlos",
+    spirit: "Tequila",
+    tags: ["tequila", "stirred"],
+    ingredients: [
+      { amount: "2 oz", name: "Reposado tequila" },
+      { amount: "0.5 oz", name: "Bénédictine" },
+      { amount: "2 dashes", name: "Angostura bitters" },
+      { amount: "1 twist", name: "Lemon" }
+    ],
+    method: "Stir with ice. Strain into rocks glass over large ice cube. Express lemon twist and garnish.",
+    notes: "A riff on the Monte Carlo (classic uses rye) — tequila swap inspired by @thelittle.ghost. Via @brettontherun & @drinksouthbound. Clean, intentional, no excess."
+  },
+  {
+    name: "Irish Maid",
+    spirit: "Whiskey",
+    tags: ["whiskey"],
+    ingredients: [
+      { amount: "2 oz / 60 ml", name: "Irish whiskey" },
+      { amount: "½ oz / 15 ml", name: "Elderflower liqueur" },
+      { amount: "¾ oz / 22.5 ml", name: "Fresh lemon juice" },
+      { amount: "½ oz / 15 ml", name: "Simple syrup" },
+      { amount: "2 slices", name: "Cucumber, lightly muddled" }
+    ],
+    method: "Muddle cucumber in shaker. Add remaining ingredients, shake with ice. Strain into rocks glass over large ice sphere.",
+    notes: "Via @anatomyofadrink. Cucumber and elderflower are a natural pairing with Irish whiskey."
+  },
+  {
+    name: "Pot o' Gold",
+    spirit: "Whiskey",
+    tags: ["whiskey"],
+    ingredients: [
+      { amount: "2 oz", name: "Irish whiskey" },
+      { amount: "1 oz", name: "Fresh lemon juice" },
+      { amount: "½–¾ oz", name: "Honey syrup" },
+      { amount: "1–2 tsp", name: "Gold edible glitter" }
+    ],
+    method: "Combine all ingredients in shaker with ice. Shake and strain over ice.",
+    notes: "Via @join_jules. A Gold Rush riff with Irish whiskey for St. Patrick's Day. Use ¾ oz honey syrup if you prefer it sweeter. Glitter is optional but festive."
+  },
+  {
+    name: "Aperol Margarita",
+    spirit: "Tequila",
+    tags: ["tequila"],
+    ingredients: [
+      { amount: "1.5 oz", name: "Tequila" },
+      { amount: "1 oz", name: "Aperol" },
+      { amount: "¾ oz", name: "Lime juice" },
+      { amount: "½ oz", name: "Simple syrup" }
+    ],
+    method: "Rim glass with orange zest and salt. Shake all with ice. Strain over ice. Garnish with dehydrated orange wheel.",
+    notes: "Via @thats.thespirits. Aperol subs for triple sec — bitter-citrus twist on the classic margarita."
+  },
+  {
+    name: "Campari & Margarita Soda",
+    spirit: "Tequila",
+    tags: ["tequila"],
+    ingredients: [
+      { amount: "1 oz", name: "Campari" },
+      { amount: "1 oz", name: "Tequila reposado" },
+      { amount: "¾ oz", name: "Cointreau" },
+      { amount: "1 oz", name: "Fresh lime juice" },
+      { amount: "to top", name: "Soda water" }
+    ],
+    method: "Shake Campari, tequila, Cointreau, and lime with ice. Strain into highball over ice. Top with soda. Garnish with lime wheel.",
+    notes: "Daily Cocktail Series via @anatomyofadrink. Long, effervescent Campari margarita riff."
+  },
+  {
+    name: "Beach House Margarita",
+    spirit: "Tequila",
+    tags: ["tequila"],
+    ingredients: [
+      { amount: "1 oz", name: "Tequila blanco" },
+      { amount: "½ oz", name: "Mezcal" },
+      { amount: "½ oz", name: "Aperol" },
+      { amount: "½ oz", name: "Pineapple juice" },
+      { amount: "½ oz", name: "Fresh lime juice" },
+      { amount: "¼ oz", name: "Simple syrup" },
+      { amount: "1 tsp", name: "Passionfruit syrup" }
+    ],
+    method: "Shake all with ice. Strain into rocks glass over ice.",
+    notes: "Via @anatomyofadrink. 'A beach house margarita.' Split tequila/mezcal base with Aperol and passionfruit — tropical and smoky."
+  },
+  {
+    name: "Orange Whip",
+    spirit: "Rum",
+    tags: ["rum"],
+    ingredients: [
+      { amount: "30 ml", name: "Rum" },
+      { amount: "30 ml", name: "Vodka" },
+      { amount: "15 ml", name: "Cointreau" },
+      { amount: "120 ml", name: "Orange juice" },
+      { amount: "60 ml", name: "Double cream" }
+    ],
+    method: "Shake all with ice. Strain into glass. Garnish with orange wheel.",
+    notes: "Via @my_cocktail_bible. Famous from The Blues Brothers (1980). Creamy, citrusy, and crowd-pleasing."
+  },
+  {
+    name: "Chasing Autumn",
+    spirit: "Rum",
+    tags: ["rum", "stirred"],
+    ingredients: [
+      { amount: "1 oz / 30 ml", name: "Aged rum" },
+      { amount: "1 oz / 30 ml", name: "Cognac" },
+      { amount: "¼ oz / 7.5 ml", name: "Cinnamon syrup" },
+      { amount: "5–6 dashes", name: "Old fashioned bitters (Fee Brothers)" },
+      { amount: "to garnish", name: "Orange peel oil" }
+    ],
+    method: "Stir all with ice. Strain into rocks glass over clear ice. Express orange peel.",
+    notes: "Via @anatomyofadrink. Rum and Cognac Old Fashioned riff. Fee Brothers bitters have a Christmas-spice vibe. Sub any aromatic bitters."
+  },
+  {
+    name: "Red Hook",
+    spirit: "Whiskey",
+    tags: ["whiskey", "stirred"],
+    ingredients: [
+      { amount: "2 oz / 60 ml", name: "Rye whiskey" },
+      { amount: "½ oz / 15 ml", name: "Maraschino liqueur" },
+      { amount: "½ oz / 15 ml", name: "Punt e Mes" }
+    ],
+    method: "Stir all with ice. Strain into chilled coupe or Nick & Nora. Garnish with cherry.",
+    notes: "Via @theeducatedbarfly. Manhattan riff — Punt e Mes adds bitter depth in place of sweet vermouth."
+  },
+  {
+    name: "Meh-groni",
+    spirit: "Mezcal",
+    tags: ["mezcal", "stirred"],
+    ingredients: [
+      { amount: "1 oz", name: "Mezcal" },
+      { amount: "1 oz", name: "Carpano Antica Formula" },
+      { amount: "½ oz", name: "Punt e Mes" },
+      { amount: "1 dash", name: "Orange bitters" }
+    ],
+    method: "Stir all with ice. Strain into rocks glass over large ice. Garnish with orange peel.",
+    notes: "Via @diffordsguide. Negroni with mezcal instead of gin — bold, smoky, bittersweet. Exact ratios not shown in post; these are approximate from the description. Verify at diffordsguide.com."
+  },
+  {
+    name: "Cornwall Negroni",
+    spirit: "Gin",
+    tags: ["gin", "stirred"],
+    ingredients: [
+      { amount: "1½ oz / 45 ml", name: "Gin" },
+      { amount: "½ oz / 15 ml", name: "Sweet vermouth" },
+      { amount: "½ oz / 15 ml", name: "Punt e Mes" },
+      { amount: "½ oz / 15 ml", name: "Campari" },
+      { amount: "1 dash", name: "Orange bitters" }
+    ],
+    method: "Build in glass. Stir briefly. Garnish with orange disc.",
+    notes: "Via @theeducatedbarfly. One of the first Negroni variations — splits the bitter/vermouth between Punt e Mes and Campari. By Gaz Regan (#garyreagan)."
+  },
+  {
+    name: "French Blonde",
+    spirit: "Gin",
+    tags: ["gin"],
+    ingredients: [
+      { amount: "2 oz", name: "Lillet Blanc" },
+      { amount: "2 oz", name: "Fresh grapefruit juice" },
+      { amount: "1 oz", name: "Gin" },
+      { amount: "½ oz", name: "Elderflower liqueur" },
+      { amount: "3 dashes", name: "Bitters" }
+    ],
+    method: "Shake all with ice. Double strain into chilled coupe. Garnish with fresh sage.",
+    notes: "Via @kentuckyginger. Lillet-forward, floral, and citrusy. Sage garnish is optional but beautiful."
+  },
+  {
+    name: "A La Louisiane",
+    spirit: "Whiskey",
+    tags: ["whiskey", "stirred"],
+    ingredients: [
+      { amount: "2 oz / 60 ml", name: "Rye whiskey" },
+      { amount: "¾ oz / 22 ml", name: "Bénédictine" },
+      { amount: "¾ oz / 22 ml", name: "Sweet vermouth" },
+      { amount: "3 dashes", name: "Absinthe" },
+      { amount: "3 dashes", name: "Peychaud's bitters" }
+    ],
+    method: "Stir all with ice. Strain into chilled coupe or rocks glass.",
+    notes: "Via @theeducatedbarfly. Classic Manhattan riff — underrated and complex. A personal favorite of the Educated Barfly."
+  },
+  {
+    name: "Gentle Last Word",
+    spirit: "Whiskey",
+    tags: ["whiskey"],
+    ingredients: [
+      { amount: "1 oz", name: "Rye whiskey" },
+      { amount: "1 oz", name: "Lillet Blanc" },
+      { amount: "¾ oz", name: "Orange liqueur" },
+      { amount: "1 oz", name: "Fresh lemon juice" },
+      { amount: "1 dash", name: "Angostura bitters" }
+    ],
+    method: "Shake all with ice. Double strain into chilled coupe.",
+    notes: "Via @anatomyofadrink. Caption: 'A gentle Last Word riff.' Name unknown — placeholder. Last Word classic uses gin/green Chartreuse/maraschino/lime; this swaps to rye/Lillet/orange liqueur/lemon."
+  },
+  {
+    name: "Modified Expat",
+    spirit: "Whiskey",
+    tags: ["whiskey"],
+    ingredients: [
+      { amount: "1½ oz", name: "Bourbon" },
+      { amount: "½ oz", name: "Amaro Montenegro" },
+      { amount: "1 oz", name: "Fresh lime juice" },
+      { amount: "¾ oz", name: "Simple syrup" },
+      { amount: "6–8", name: "Mint leaves" },
+      { amount: "2 dashes", name: "Angostura bitters" }
+    ],
+    method: "Muddle mint lightly. Add remaining ingredients, shake with ice. Double strain into chilled coupe.",
+    notes: "Daily Cocktail Series via @anatomyofadrink. By @irrelevantbartender. Bourbon sour with Amaro Montenegro and mint."
+  },
+  {
+    name: "Paper Plane",
+    spirit: "Whiskey",
+    tags: ["whiskey"],
+    ingredients: [
+      { amount: "¾ oz", name: "Whiskey (bourbon or rye)" },
+      { amount: "¾ oz", name: "Aperol" },
+      { amount: "¾ oz", name: "Amaro Nonino" },
+      { amount: "¾ oz", name: "Lemon juice" }
+    ],
+    method: "Shake all with ice. Double strain into chilled coupe.",
+    notes: "Via @abarabove. Equal-parts classic — simple, balanced, endlessly drinkable."
+  },
+  {
+    name: "New York Sour",
+    spirit: "Whiskey",
+    tags: ["whiskey"],
+    ingredients: [
+      { amount: "1.5 oz", name: "Whiskey" },
+      { amount: "¾ oz", name: "Lemon juice" },
+      { amount: "¾ oz", name: "Simple syrup" },
+      { amount: "1", name: "Egg white" },
+      { amount: "1 oz float", name: "Red wine" }
+    ],
+    method: "Dry shake whiskey, lemon, simple syrup, and egg white. Add ice and shake again. Strain into coupe. Float red wine gently over the back of a spoon.",
+    notes: "Via @abarabove. The red wine float is the signature — use something fruity like Malbec or Shiraz."
+  },
+  {
+    name: "Dark & Smoky",
+    spirit: "Rum",
+    tags: ["rum", "stirred"],
+    ingredients: [
+      { amount: "1½ oz", name: "Aged rum" },
+      { amount: "½ oz", name: "Mezcal" },
+      { amount: "½ oz", name: "Bénédictine" },
+      { amount: "½ oz", name: "Cynar" },
+      { amount: "½ tsp", name: "Demerara syrup" },
+      { amount: "2 dashes", name: "Orange bitters" },
+      { amount: "2 dashes", name: "Chocolate bitters" }
+    ],
+    method: "Stir all with ice. Strain into rocks glass over large ice.",
+    notes: "Via @anatomyofadrink. Caption: 'Complex, dark, quietly smoky.' Name unknown — placeholder. Update if identified."
+  },
+  {
+    name: "Death & Taxes",
+    spirit: "Scotch",
+    tags: ["stirred"],
+    ingredients: [
+      { amount: "30 ml", name: "Blended scotch" },
+      { amount: "30 ml", name: "Gin" },
+      { amount: "22.5 ml", name: "Sweet vermouth" },
+      { amount: "10 ml", name: "Bénédictine" },
+      { amount: "2 dashes", name: "Orange bitters" },
+      { amount: "to garnish", name: "Lemon peel" }
+    ],
+    method: "Stir all with ice. Strain into chilled coupe or Nick & Nora. Express lemon peel.",
+    notes: "By Michael Madrusan, Milk & Honey NYC, 2011. Via @proofnote. Scotch/gin split base with Bénédictine."
+  },
+  {
+    name: "Vieux Carré",
+    spirit: "Whiskey",
+    tags: ["whiskey", "stirred"],
+    ingredients: [
+      { amount: "1 oz / 30 ml", name: "Rye whiskey" },
+      { amount: "1 oz / 30 ml", name: "Cognac" },
+      { amount: "1 oz / 30 ml", name: "Sweet vermouth" },
+      { amount: "¼ oz / 7.5 ml", name: "Bénédictine" },
+      { amount: "2 dashes", name: "Peychaud's bitters" },
+      { amount: "2 dashes", name: "Angostura bitters" }
+    ],
+    method: "Build in mixing glass or rocks glass. Stir with ice. Strain or serve over large ice. Garnish with orange twist.",
+    notes: "Via @theeducatedbarfly. New Orleans classic — periodically overlooked but always worth returning to."
+  },
+  {
+    name: "Planters Punch",
+    spirit: "Rum",
+    tags: ["rum", "tiki"],
+    ingredients: [
+      { amount: "3 oz", name: "Aged rum" },
+      { amount: "¾ oz", name: "Demerara syrup (2:1)" },
+      { amount: "1 oz", name: "Lime juice" },
+      { amount: "¼ oz", name: "Allspice liqueur" }
+    ],
+    method: "Shake all with ice. Strain over ice. Garnish with lime and fresh nutmeg.",
+    notes: "Via @thirstywhale_. Simple and deeply flavorful. Allspice liqueur (pimento dram) is the key ingredient."
+  },
+  {
+    name: "Clarified Mai Tai",
+    spirit: "Rum",
+    tags: ["rum", "tiki"],
+    ingredients: [
+      { amount: "2 cups", name: "Aged Jamaican rum" },
+      { amount: "1 cup", name: "Lime juice" },
+      { amount: "½ cup", name: "Orgeat" },
+      { amount: "½ cup", name: "Orange curaçao" },
+      { amount: "optional", name: "Salt and aromatic bitters" }
+    ],
+    method: "Batch all ingredients. Clarify using milk-washing or other method. Serve over ice.",
+    notes: "Via @thirstywhale_. Batch/clarified version of the Mai Tai. Use high-proof funky Jamaican rum — aged cachaca or Mexican rum also work. Shake before serving for different texture."
+  },
+  {
+    name: "Bourbon Renewal",
+    spirit: "Whiskey",
+    tags: ["whiskey"],
+    ingredients: [
+      { amount: "2 oz", name: "Bourbon" },
+      { amount: "1 oz", name: "Fresh lemon juice" },
+      { amount: "½ oz", name: "Crème de Cassis" },
+      { amount: "½ oz", name: "Simple syrup" },
+      { amount: "1 dash", name: "Aromatic bitters" },
+      { amount: "to garnish", name: "Lemon wheel" }
+    ],
+    method: "Shake all with ice. Strain into rocks glass over ice. Garnish with lemon wheel.",
+    notes: "By @jeffmorgen. Bourbon sour with Crème de Cassis — the cassis adds a deep berry note and beautiful color."
+  },
+  {
+    name: "Lion's Tail",
+    spirit: "Whiskey",
+    tags: ["whiskey"],
+    ingredients: [
+      { amount: "2 oz", name: "Bourbon" },
+      { amount: "½ oz", name: "Allspice dram (pimento dram)" },
+      { amount: "¼ oz", name: "Simple syrup" },
+      { amount: "¾ oz", name: "Fresh lime juice" },
+      { amount: "2–3 dashes", name: "Angostura bitters" }
+    ],
+    method: "Shake all with ice. Double strain into chilled coupe.",
+    notes: "1930s Prohibition-era classic. Allspice dram is the key — warm, spicy, and unlike anything else in a bourbon sour template."
+  },
+  {
+    name: "Daiquilroy",
+    spirit: "Rum",
+    tags: ["rum"],
+    ingredients: [
+      { amount: "2 oz / 60 ml", name: "Aged rum" },
+      { amount: "1 oz / 30 ml", name: "Pineapple juice" },
+      { amount: "½ oz / 15 ml", name: "Fresh lime juice" },
+      { amount: "½ oz / 15 ml", name: "Simple syrup" }
+    ],
+    method: "Shake all with ice. Double strain into chilled coupe.",
+    notes: "Pineapple daiquiri riff — cleaner and simpler than the Flamingo, letting the rum and pineapple do the work."
+  },
+  {
+    name: "Chartreuse Swizzle",
+    spirit: "Liqueur",
+    tags: ["tiki"],
+    ingredients: [
+      { amount: "1.5 oz", name: "Green Chartreuse" },
+      { amount: "1 oz", name: "Pineapple juice" },
+      { amount: "¾ oz", name: "Lime juice" },
+      { amount: "½ oz", name: "Falernum" }
+    ],
+    method: "Combine all in a tall glass or tiki mug filled with crushed ice. Swizzle until frosty. Top with more crushed ice. Garnish with mint sprig and lime wheel.",
+    notes: "Created by Marcovaldo Dionysos at Farallon, San Francisco. Chartreuse-forward tiki classic — herbal, tropical, and dangerously drinkable."
+  },
+  {
+    name: "Doctor's Orders",
+    spirit: "Rum",
+    tags: ["rum", "tiki"],
+    ingredients: [
+      { amount: "1½ oz", name: "Dark aged rum" },
+      { amount: "½ oz", name: "Jamaican rum" },
+      { amount: "½ oz", name: "Green Chartreuse" },
+      { amount: "2 oz", name: "Fresh pineapple juice" },
+      { amount: "1 oz", name: "Cream of coconut" },
+      { amount: "1 oz", name: "Fresh orange juice" },
+      { amount: "1 dash", name: "Absinthe" },
+      { amount: "to garnish", name: "Freshly grated nutmeg" }
+    ],
+    method: "Add all ingredients to shaker with ice. Shake well. Strain over ice into glass. Garnish with grated nutmeg.",
+    notes: "Via @theweekendmixologist. Painkiller with herbaceous pizazz — Green Chartreuse and a dash of Absinthe lift the classic coconut/pineapple template into something more complex."
+  },
+  {
+    name: "Chocolate Orange Manhattan",
+    spirit: "Whiskey",
+    tags: ["whiskey", "stirred"],
+    ingredients: [
+      { amount: "2 oz", name: "Bourbon" },
+      { amount: "1 oz", name: "Sweet vermouth" },
+      { amount: "½ oz", name: "Orange liqueur" },
+      { amount: "½ oz", name: "Coffee liqueur" },
+      { amount: "4 dashes", name: "Chocolate bitters" }
+    ],
+    method: "Stir all with ice. Strain into chilled coupe or Nick & Nora. Garnish with orange peel.",
+    notes: "Manhattan riff leaning into dessert territory — coffee and chocolate bitters with orange liqueur make this rich and indulgent."
+  },
+  {
+    name: "Oaxacan Fix",
+    spirit: "Tequila",
+    tags: ["tequila", "mezcal"],
+    ingredients: [
+      { amount: "1½ oz / 45 ml", name: "Añejo tequila" },
+      { amount: "½ oz / 15 ml", name: "Mezcal" },
+      { amount: "½ oz / 15 ml", name: "Lemon juice" },
+      { amount: "¼ oz / 7.5 ml", name: "Curaçao" },
+      { amount: "¼ oz / 7.5 ml", name: "Agave syrup" },
+      { amount: "to garnish", name: "Orange twist" }
+    ],
+    method: "Shake all with ice. Strain over crushed ice into rocks glass. Express orange twist and garnish.",
+    notes: "Añejo-forward with a mezcal smoke accent. The fix format (citrus + liqueur + syrup) keeps it bright despite the aged spirit base."
+  },
+  {
+    name: "Copa De Oro",
+    spirit: "Tequila",
+    tags: ["tequila"],
+    ingredients: [
+      { amount: "2 oz / 60 ml", name: "Tequila blanco" },
+      { amount: "¾ oz / 22 ml", name: "Lemon juice" },
+      { amount: "¾ oz / 22 ml", name: "Honey syrup" },
+      { amount: "3 dashes", name: "Hot sauce" },
+      { amount: "pinch", name: "Salt" }
+    ],
+    method: "Shake all with ice. Strain into rocks glass over ice.",
+    notes: "Gold Rush template with tequila — honey and lemon with heat and salt. The hot sauce and salt push it toward a spicy margarita territory."
+  },
+  {
+    name: "El Pepino",
+    spirit: "Tequila",
+    tags: ["tequila"],
+    ingredients: [
+      { amount: "5 slices", name: "Cucumber" },
+      { amount: "2 oz", name: "Tequila" },
+      { amount: "1 oz", name: "Lime juice" },
+      { amount: "¾ oz", name: "Triple sec" },
+      { amount: "½ oz", name: "Agave syrup" },
+      { amount: "¾ oz", name: "Pineapple juice" }
+    ],
+    method: "Muddle cucumber in shaker. Add remaining ingredients with ice and shake well. Double strain into rocks glass over ice. Garnish with cucumber slice.",
+    notes: "El Pepino = The Cucumber. Cucumber margarita riff with pineapple — refreshing, tropical, and great for warm weather."
+  },
+  {
+    name: "Pyramid Scheme",
+    spirit: "Tequila",
+    tags: ["tequila", "stirred"],
+    ingredients: [
+      { amount: "2 oz", name: "Tequila blanco" },
+      { amount: "1 oz", name: "Dry vermouth" },
+      { amount: "½ oz", name: "Amaro Nonino" },
+      { amount: "¼ oz", name: "Campari" },
+      { amount: "1 dash", name: "Orange bitters" }
+    ],
+    method: "Stir all with ice. Strain into chilled coupe or Nick & Nora. Express orange peel if desired.",
+    notes: "By @scottjamesteague. Tequila Martini meets bitter amaro — dry vermouth keeps it light while Amaro Nonino and Campari add complexity and bitterness."
+  },
+  {
+    name: "Sidecar",
+    spirit: "Cognac",
+    tags: ["stirred"],
+    ingredients: [
+      { amount: "1.5 oz", name: "Cognac" },
+      { amount: "1 oz", name: "Orange liqueur" },
+      { amount: "¾ oz", name: "Lemon juice" },
+      { amount: "1 tsp", name: "Simple syrup" }
+    ],
+    method: "Shake all with ice. Double strain into chilled coupe. Optional: sugar rim.",
+    notes: "Classic 1920s Parisian cocktail. Via @JFDesfosses. The teaspoon of simple syrup softens the edge — adjust to taste."
+  },
+  {
+    name: "Brown Derby",
+    spirit: "Whiskey",
+    tags: ["whiskey"],
+    ingredients: [
+      { amount: "1.5 oz", name: "Bourbon" },
+      { amount: "1 oz", name: "Fresh grapefruit juice" },
+      { amount: "½ oz", name: "Honey orgeat" }
+    ],
+    method: "Shake all with ice. Double strain into chilled stemmed cocktail glass. Garnish with grapefruit twist if desired.",
+    notes: "1930s Hollywood classic. The honey orgeat is homemade — see below. HONEY ORGEAT: Combine 500g honey, 250g unsweetened almond milk, 1 tbsp almond extract, ¼ cup cognac, ¼ tsp orange blossom water, and a pinch of salt. Stir well to combine. Store refrigerated up to 2 weeks."
+  },
+  {
+    name: "Coffee Boulevardier",
+    spirit: "Whiskey",
+    tags: ["whiskey", "stirred"],
+    ingredients: [
+      { amount: "1.5 oz", name: "Rye whiskey" },
+      { amount: "¾ oz", name: "Campari" },
+      { amount: "¾ oz", name: "Coffee liqueur" },
+      { amount: "¾ oz", name: "Sweet vermouth" }
+    ],
+    method: "Stir all with ice. Strain into rocks glass over large ice. Express orange peel and garnish.",
+    notes: "Boulevardier riff swapping half the vermouth for coffee liqueur — adds a roasty depth that works beautifully with rye and Campari."
+  },
+  {
+    name: "Clarified Paper Plane",
+    spirit: "Whiskey",
+    tags: ["whiskey"],
+    ingredients: [
+      { amount: "10 oz", name: "Bourbon" },
+      { amount: "10 oz", name: "Aperol" },
+      { amount: "10 oz", name: "Amaro Nonino" },
+      { amount: "10 oz", name: "Fresh lemon juice" },
+      { amount: "8 oz", name: "Whole milk (for clarification)" }
+    ],
+    method: "Mix all cocktail ingredients together. Slowly pour the mixture over the milk (not the other way around). Let curdle and rest for several hours — overnight is ideal. Strain through coffee filter, cheesecloth, or nut milk bag. The first pass will be cloudy — pour it back through the filter until clear. Serve over ice or straight from the fridge. For extra dilution, stir over ice 10–15 seconds before serving.",
+    notes: "Batch milk-clarified version of the Paper Plane. Clarification removes tannins and tart edges, producing a silky, clear, shelf-stable cocktail. Makes approximately 8–10 servings. Store refrigerated."
+  },
+  {
+    name: "Oriental Cocktail",
+    spirit: "Whiskey",
+    tags: ["whiskey"],
+    ingredients: [
+      { amount: "1½ oz / 45 ml", name: "Rye whiskey" },
+      { amount: "¾ oz / 22 ml", name: "Sweet vermouth" },
+      { amount: "¾ oz / 22 ml", name: "Triple sec" },
+      { amount: "½ oz / 15 ml", name: "Lime juice" }
+    ],
+    method: "Shake all with ice. Double strain into chilled coupe.",
+    notes: "1920s classic — rye and sweet vermouth with orange and lime. Similar structure to a Perfect Manhattan but with citrus brightness from the triple sec and lime."
+  },
+  {
+    name: "Monte Carlo",
+    spirit: "Whiskey",
+    tags: ["whiskey", "stirred"],
+    ingredients: [
+      { amount: "2 oz / 60 ml", name: "Rye whiskey" },
+      { amount: "½ oz / 15 ml", name: "Bénédictine" },
+      { amount: "2 dashes", name: "Angostura bitters" },
+      { amount: "to garnish", name: "Lemon twist" }
+    ],
+    method: "Add all ingredients to mixing glass with ice and stir. Strain over large cube into rocks glass. Garnish with lemon twist.",
+    notes: "The original Monte Carlo — rye-based. Compare with Monte Carlos (tequila version) also in this collection. Simple, elegant, and underrated."
+  },
+  {
+    name: "Cock 'N' Bull Special",
+    spirit: "Whiskey",
+    tags: ["whiskey", "stirred"],
+    ingredients: [
+      { amount: "¾ oz / 22 ml", name: "Bourbon" },
+      { amount: "½ oz / 15 ml", name: "Cognac" },
+      { amount: "¾ oz / 22 ml", name: "Bénédictine" },
+      { amount: "¼ oz / 7 ml", name: "Curaçao" },
+      { amount: "2 dashes", name: "Angostura bitters" },
+      { amount: "to garnish", name: "Orange twist" }
+    ],
+    method: "Combine all in mixing glass with ice and stir. Strain over large ice into rocks glass. Garnish with orange twist.",
+    notes: "Bourbon/cognac split base with Bénédictine — similar DNA to the Vieux Carré but more spirit-forward and less sweet."
+  },
+  {
+    name: "Singapore Sling",
+    spirit: "Gin",
+    tags: ["gin"],
+    ingredients: [
+      { amount: "1.5 oz / 45 ml", name: "Gin" },
+      { amount: "½ oz / 15 ml", name: "Cherry Heering" },
+      { amount: "¼ oz / 7 ml", name: "Bénédictine" },
+      { amount: "¼ oz / 7 ml", name: "Cointreau" },
+      { amount: "2 oz / 60 ml", name: "Pineapple juice" },
+      { amount: "½ oz / 15 ml", name: "Lime juice" },
+      { amount: "1 dash", name: "Angostura bitters" },
+      { amount: "to top", name: "Club soda" }
+    ],
+    method: "Add all ingredients except club soda to shaker with ice. Shake and strain into highball over fresh ice. Top with club soda. Garnish with orange slice and cherry.",
+    notes: "Classic Raffles Hotel Singapore recipe. Cherry Heering gives it the distinctive pink color and stone-fruit depth."
+  },
+  {
+    name: "Chrysanthemum",
+    spirit: "Liqueur",
+    tags: ["stirred"],
+    ingredients: [
+      { amount: "2 oz / 60 ml", name: "Dry vermouth" },
+      { amount: "1 oz / 30 ml", name: "Bénédictine" },
+      { amount: "1 tsp", name: "Absinthe" },
+      { amount: "to garnish", name: "Orange twist" }
+    ],
+    method: "Add all to mixing glass with ice and stir. Strain into chilled stemmed cocktail glass. Garnish with orange twist.",
+    notes: "Pre-Prohibition classic — no base spirit, just vermouth and Bénédictine. Surprisingly complex and low-ABV. The absinthe is essential, not optional."
+  },
+  {
+    name: "Professor",
+    spirit: "Gin",
+    tags: ["gin"],
+    ingredients: [
+      { amount: "2 oz / 60 ml", name: "Gin" },
+      { amount: "¾ oz / 22.5 ml", name: "Fresh lime juice" },
+      { amount: "¾ oz / 22.5 ml", name: "Grenadine" },
+      { amount: "2 dashes", name: "Absinthe" }
+    ],
+    method: "Shake all with ice. Double strain into chilled coupe.",
+    notes: "Via @anatomyofadrink. Gimlet-adjacent with grenadine instead of simple syrup — the absinthe adds an anise backbone that lifts the whole thing."
+  },
+  {
+    name: "Olivia",
+    spirit: "Gin",
+    tags: ["gin"],
+    ingredients: [
+      { amount: "2 oz / 60 ml", name: "Gin" },
+      { amount: "½ oz / 15 ml", name: "Amaretto" },
+      { amount: "¾ oz / 22.5 ml", name: "Fresh lemon juice" },
+      { amount: "½ oz / 15 ml", name: "Honey syrup (2:1)" },
+      { amount: "½ oz / 15 ml", name: "Extra virgin olive oil" },
+      { amount: "1", name: "Egg white or foamer" }
+    ],
+    method: "Combine all ingredients and dry shake vigorously without ice to emulsify the olive oil. Add ice and shake again. Double strain into chilled coupe.",
+    notes: "The olive oil is the star — it creates a luxurious, silky texture and adds a subtle savory richness. Dry shake extra hard to fully emulsify."
+  },
+  {
+    name: "Army & Navy",
+    spirit: "Gin",
+    tags: ["gin"],
+    ingredients: [
+      { amount: "2 oz / 60 ml", name: "Gin" },
+      { amount: "¾–1 oz / 22–30 ml", name: "Fresh lemon juice" },
+      { amount: "¾ oz / 22 ml", name: "Orgeat" },
+      { amount: "1 dash", name: "Angostura bitters" },
+      { amount: "to garnish", name: "Lemon or grapefruit twist" }
+    ],
+    method: "Shake all with ice. Double strain into chilled stemmed cocktail glass. Garnish with lemon or grapefruit twist.",
+    notes: "Pre-Prohibition classic — essentially a gin sour with orgeat instead of simple syrup. Adjust lemon to taste; more lemon keeps it bright, less lets the orgeat shine."
+  },
+  {
+    name: "Gin Sour",
+    spirit: "Gin",
+    tags: ["gin"],
+    ingredients: [
+      { amount: "2 oz", name: "Gin" },
+      { amount: "¾ oz", name: "Lemon juice" },
+      { amount: "¾ oz", name: "Simple syrup" },
+      { amount: "1", name: "Egg white or aquafaba (optional)" }
+    ],
+    method: "Dry shake if using egg white. Add ice and shake again. Strain into chilled coupe. Optional: add a few drops of Angostura bitters on the foam.",
+    notes: "Via Flavor Camp. The foundational gin sour — everything else on the gin sour family tree starts here."
+  },
+  {
+    name: "Clover Club",
+    spirit: "Gin",
+    tags: ["gin"],
+    ingredients: [
+      { amount: "2 oz", name: "Gin" },
+      { amount: "¾ oz", name: "Lemon juice" },
+      { amount: "¾ oz", name: "Raspberry syrup" },
+      { amount: "0.5 oz", name: "Egg white" }
+    ],
+    method: "Dry shake, then shake with ice. Strain into chilled coupe.",
+    notes: "Via Flavor Camp. Pre-Prohibition Philadelphia classic — raspberry syrup gives it a vivid pink color and berry depth."
+  },
+  {
+    name: "Southside",
+    spirit: "Gin",
+    tags: ["gin"],
+    ingredients: [
+      { amount: "2 oz", name: "Gin" },
+      { amount: "¾ oz", name: "Lemon or lime juice" },
+      { amount: "¾ oz", name: "Simple syrup" },
+      { amount: "6–8", name: "Mint leaves" }
+    ],
+    method: "Muddle mint gently. Add remaining ingredients with ice and shake. Double strain into chilled coupe.",
+    notes: "Via Flavor Camp. A gin mojito in coupe form — fresh, clean, and refreshing."
+  },
+  {
+    name: "Bees Knees",
+    spirit: "Gin",
+    tags: ["gin"],
+    ingredients: [
+      { amount: "2 oz", name: "Gin" },
+      { amount: "¾ oz", name: "Lemon juice" },
+      { amount: "¾ oz", name: "Honey syrup (1:1 honey + water)" }
+    ],
+    method: "Shake all with ice. Strain into chilled coupe.",
+    notes: "Via Flavor Camp. Prohibition-era classic — honey syrup instead of simple syrup is the only difference from a basic gin sour, but it changes everything."
+  },
+  {
+    name: "French 75",
+    spirit: "Gin",
+    tags: ["gin"],
+    ingredients: [
+      { amount: "1 oz", name: "Gin" },
+      { amount: "½ oz", name: "Lemon juice" },
+      { amount: "½ oz", name: "Simple syrup" },
+      { amount: "3 oz", name: "Sparkling wine" }
+    ],
+    method: "Shake gin, lemon, and syrup with ice. Strain into a flute. Top with sparkling wine.",
+    notes: "Via Flavor Camp. Named after the French 75mm artillery piece — light and effervescent but packs a punch."
+  },
+  {
+    name: "Tom Collins",
+    spirit: "Gin",
+    tags: ["gin"],
+    ingredients: [
+      { amount: "2 oz", name: "Gin" },
+      { amount: "1 oz", name: "Lemon juice" },
+      { amount: "¾ oz", name: "Simple syrup" },
+      { amount: "2–3 oz", name: "Soda water" }
+    ],
+    method: "Shake gin, lemon, and syrup with ice. Strain into tall glass over ice. Top with soda water.",
+    notes: "Via Flavor Camp. The original long gin drink — simple, sessionable, and endlessly refreshing."
+  },
+  {
+    name: "Casino",
+    spirit: "Gin",
+    tags: ["gin"],
+    ingredients: [
+      { amount: "2 oz", name: "Gin" },
+      { amount: "½ oz", name: "Maraschino liqueur" },
+      { amount: "¼ oz", name: "Orange bitters" },
+      { amount: "¼ oz", name: "Lemon juice" }
+    ],
+    method: "Shake with ice. Strain into chilled coupe.",
+    notes: "Via Flavor Camp. Pre-Prohibition classic — essentially a Martini with maraschino and a citrus edge."
+  },
+  {
+    name: "Aviation",
+    spirit: "Gin",
+    tags: ["gin"],
+    ingredients: [
+      { amount: "2 oz", name: "Gin" },
+      { amount: "½ oz", name: "Maraschino liqueur" },
+      { amount: "¼ oz", name: "Crème de Violette" },
+      { amount: "¾ oz", name: "Lemon juice" }
+    ],
+    method: "Shake with ice. Strain into chilled coupe. Garnish with cherry.",
+    notes: "Via Flavor Camp. The Crème de Violette gives the famous pale purple color and floral note — don't skip it."
+  },
+  {
+    name: "Orange Blossom",
+    spirit: "Gin",
+    tags: ["gin"],
+    ingredients: [
+      { amount: "1½ oz", name: "Gin" },
+      { amount: "1½ oz", name: "Fresh orange juice" },
+      { amount: "1½ oz", name: "Sweet vermouth" }
+    ],
+    method: "Shake all with ice. Strain into chilled coupe. Garnish with orange slice.",
+    notes: "Prohibition-era classic — equal parts gin, OJ, and vermouth. Simple, approachable, and surprisingly elegant."
+  },
+  {
+    name: "Stinger",
+    spirit: "Cognac",
+    tags: ["stirred"],
+    ingredients: [
+      { amount: "2¼ oz", name: "Cognac" },
+      { amount: "¾ oz", name: "White crème de menthe" }
+    ],
+    method: "Shake or stir with ice. Strain into chilled coupe. Garnish with fresh mint.",
+    notes: "Old-school classic — cognac and mint, nothing else. Surprisingly refreshing despite its simplicity. Shake for a lighter texture, stir for a more spirit-forward result."
+  },
+  {
+    name: "Grasshopper",
+    spirit: "Liqueur",
+    tags: [],
+    ingredients: [
+      { amount: "1 oz", name: "Green crème de menthe" },
+      { amount: "1 oz", name: "White crème de cacao" },
+      { amount: "1 oz", name: "Heavy cream" }
+    ],
+    method: "Shake all with ice. Strain into chilled coupe.",
+    notes: "New Orleans dessert classic from Tujague's restaurant. Minty, creamy, and vivid green. Best served ice cold."
+  },
+  {
+    name: "Vesper",
+    spirit: "Gin",
+    tags: ["gin", "stirred"],
+    ingredients: [
+      { amount: "3 oz", name: "Gin" },
+      { amount: "1 oz", name: "Vodka" },
+      { amount: "½ oz", name: "Lillet Blanc" },
+      { amount: "to garnish", name: "Lemon twist" }
+    ],
+    method: "Shake or stir with ice. Strain into chilled martini glass. Garnish with lemon twist.",
+    notes: "James Bond's original martini from Casino Royale (1953). 'Shaken, not stirred' — though stirring gives a silkier result. Gin-forward with Lillet softening the vodka."
+  },
+  {
+    name: "Gin Martini (Alton Brown)",
+    spirit: "Gin",
+    tags: ["gin", "stirred"],
+    ingredients: [
+      { amount: "3.5 oz", name: "Gin (kept cold)" },
+      { amount: "2 tsp", name: "Dry vermouth (frozen with water)" },
+      { amount: "1 tsp", name: "Water (frozen with vermouth)" },
+      { amount: "to garnish", name: "Olive" }
+    ],
+    method: "Freeze vermouth and water together into a single ice cube. Keep glasses in the freezer until ready to serve. Add cold gin and the vermouth/water ice cube to the frozen glass. Allow to sit for 2 minutes to dilute and chill, then garnish with olive and serve.",
+    notes: "Alton Brown's method — no shaking, no stirring. The vermouth/water cube controls dilution precisely and chills the gin without over-diluting. The frozen glass is non-negotiable."
+  },
+  {
+    name: "Eric's Standard Martini",
+    spirit: "Gin",
+    tags: ["gin", "stirred"],
+    ingredients: [
+      { amount: "3 parts", name: "Gin" },
+      { amount: "1 part", name: "Dry vermouth" },
+      { amount: "1 drop", name: "Orange bitters (optional)" }
+    ],
+    method: "Fill shaker all the way with ice cubes. Add gin, vermouth, and bitters if using. Stir well. Strain into frozen martini glass.",
+    notes: "The house martini. 3:1 ratio — wetter than Alton Brown's version, drier than equal parts. Fill the shaker completely with ice for maximum chill and proper dilution."
+  },
+  {
+    name: "Baby Turtle",
+    spirit: "Tequila",
+    tags: ["tequila"],
+    ingredients: [
+      { amount: "2 oz", name: "Reposado tequila" },
+      { amount: "¼ oz", name: "Campari" },
+      { amount: "¾ oz", name: "Fresh lime juice" },
+      { amount: "½ oz", name: "Fresh grapefruit juice" },
+      { amount: "½ oz", name: "Cinnamon syrup" },
+      { amount: "2 dashes", name: "Saline solution" },
+      { amount: "1", name: "Egg white" }
+    ],
+    method: "Dry shake all to aerate egg white. Add ice and shake again. Double strain into chilled rocks glass.",
+    notes: "Created at Trick Dog, San Francisco, 2013. Via @dtdrinks. Cinnamon complements the Campari and grapefruit beautifully."
+  },
+  {
+    name: "Pinkies Up Club",
+    spirit: "Gin",
+    tags: ["gin"],
+    ingredients: [
+      { amount: "2 oz", name: "London Dry Gin" },
+      { amount: "0.25 oz", name: "Orgeat" },
+      { amount: "0.5 oz", name: "Lemon juice" },
+      { amount: "2", name: "Blackberries" },
+      { amount: "1", name: "Egg white" }
+    ],
+    method: "Muddle blackberries. Add remaining ingredients, dry shake, then shake with ice. Double strain into chilled coupe. Garnish with frozen blackberries.",
+    notes: "By @cheerstohappyhour via @aboutdrinksandbars."
+  },
+  {
+    name: "Tuxedo No. 2",
+    spirit: "Gin",
+    tags: ["gin", "stirred"],
+    ingredients: [
+      { amount: "2 oz", name: "Gin" },
+      { amount: "¾ oz", name: "Dry vermouth" },
+      { amount: "¼ oz", name: "Maraschino liqueur" },
+      { amount: "3 dashes", name: "Orange bitters" },
+      { amount: "rinse", name: "Absinthe" }
+    ],
+    method: "Rinse chilled Nick & Nora with absinthe. Stir remaining ingredients with ice. Strain into glass. Garnish with orange peel.",
+    notes: "Via @dtdrinks. A classic for a reason — clean, aromatic, and complex."
+  },
+  {
+    name: "Sunny Side Up",
+    spirit: "Whiskey",
+    tags: ["whiskey"],
+    ingredients: [
+      { amount: "45 ml / 1.5 oz", name: "Bourbon" },
+      { amount: "15 ml / 0.5 oz", name: "Crème de Pamplemousse" },
+      { amount: "15 ml / 0.5 oz", name: "Simple syrup" },
+      { amount: "30 ml / 1 oz", name: "Lemon juice" },
+      { amount: "1 dash", name: "Aromatic bitters" },
+      { amount: "22.5 ml / 0.75 oz", name: "Fancy foamer (or egg white)" }
+    ],
+    method: "Shake all with ice. Strain up into chilled coupe. Garnish with a circle of grapefruit peel.",
+    notes: "Via @servedbysoberon. Crème de Pamplemousse (grapefruit liqueur) gives it that sunny citrus depth."
+  },
+  {
+    name: "Soundscape",
+    spirit: "Gin",
+    tags: ["gin"],
+    ingredients: [
+      { amount: "1⅔ oz / 50 ml", name: "Gin" },
+      { amount: "⅔ oz / 20 ml", name: "Aperol" },
+      { amount: "⅔ oz / 20 ml", name: "Fresh orange juice" },
+      { amount: "⅓ oz / 10 ml", name: "Fresh lemon juice" },
+      { amount: "1–2 barspoons", name: "Simple syrup" },
+      { amount: "to garnish", name: "Orange peel oil" }
+    ],
+    method: "Shake all with ice. Double strain into chilled coupe. Express orange peel over the top.",
+    notes: "Via @anatomyofadrink. 'A citrusy gin cocktail you'll fall in love with.' Aperol adds bittersweet orange depth without overpowering the gin."
+  },
+  {
+    name: "Chestnut Cup",
+    spirit: "Gin",
+    tags: ["gin"],
+    ingredients: [
+      { amount: "1 oz / 30 ml", name: "Gin" },
+      { amount: "1 oz / 30 ml", name: "Campari" },
+      { amount: "1 oz / 30 ml", name: "Lemon juice" },
+      { amount: "¾ oz / 22.5 ml", name: "Orgeat" }
+    ],
+    method: "Shake all with ice. Double strain into chilled coupe.",
+    notes: "Campari sour with gin and orgeat — the almond sweetness of orgeat tames the Campari bitterness beautifully."
+  },
+  {
+    name: "White Lady",
+    spirit: "Gin",
+    tags: ["gin"],
+    ingredients: [
+      { amount: "45 ml", name: "Gin (navy strength recommended)" },
+      { amount: "30 ml", name: "Lemon juice" },
+      { amount: "22.5 ml", name: "Cointreau" },
+      { amount: "10 ml", name: "Simple syrup" },
+      { amount: "1", name: "Egg white (or vegan alternative)" }
+    ],
+    method: "Dry shake all to aerate. Add ice and shake again. Double strain into chilled martini or coupe glass.",
+    notes: "Via @speakeasieruk. Classic prohibition-era sour. Navy strength gin recommended for extra punch."
+  },
+  {
+    name: "Aperol Sour",
+    spirit: "Gin",
+    tags: ["gin"],
+    ingredients: [
+      { amount: "30 ml", name: "Gin" },
+      { amount: "60 ml", name: "Aperol" },
+      { amount: "30 ml", name: "Lemon juice" },
+      { amount: "15 ml", name: "Simple syrup" },
+      { amount: "1", name: "Egg white" }
+    ],
+    method: "Dry shake all to aerate egg white. Add ice and shake again. Double strain into coupe. Garnish with dehydrated orange.",
+    notes: "Via @my_cocktail_bible. Aperol-forward sour with gin backbone. Aperol carries more weight than the gin here."
+  },
+  {
+    name: "Freezer Door Martini",
+    spirit: "Gin",
+    tags: ["gin", "stirred"],
+    ingredients: [
+      { amount: "21 oz", name: "Gin or vodka" },
+      { amount: "4.25 oz", name: "Dry vermouth" },
+      { amount: "5 oz", name: "Filtered water (dilution)" }
+    ],
+    method: "Combine all ingredients in a large bottle or container. Store in the freezer. Pour directly into frozen martini glasses when ready — no shaking or stirring needed.",
+    notes: "Batch martini designed to live in the freezer. The water accounts for dilution so each pour is perfectly balanced straight from the bottle. Makes approximately 10–12 martinis. Ratio is roughly 5:1 gin to vermouth."
+  },
+  {
+    name: "Right Word",
+    spirit: "Gin",
+    tags: ["gin"],
+    ingredients: [
+      { amount: "¾ oz / 22.5 ml", name: "Gin" },
+      { amount: "¾ oz / 22.5 ml", name: "Elderflower liqueur" },
+      { amount: "¾ oz / 22.5 ml", name: "Lillet Blanc" },
+      { amount: "¾ oz / 22.5 ml", name: "Fresh lime juice" }
+    ],
+    method: "Shake all with ice. Double strain into chilled coupe.",
+    notes: "Equal-parts riff on the Last Word — elderflower and Lillet Blanc in place of green Chartreuse and maraschino. Floral, bright, and very easy to drink."
+  },
+  {
+    name: "Gloria",
+    spirit: "Gin",
+    tags: ["gin", "stirred"],
+    ingredients: [
+      { amount: "1.5 oz", name: "Gin" },
+      { amount: "½ oz", name: "Dry vermouth" },
+      { amount: "½ oz", name: "Orange liqueur" },
+      { amount: "½ oz", name: "Campari" }
+    ],
+    method: "Stir all with ice. Strain into chilled coupe or Nick & Nora. Express orange peel if desired.",
+    notes: "Negroni-adjacent — dry vermouth instead of sweet shifts it drier and more herbal, with the orange liqueur bridging the gap."
+  }
+];
+
+// Render
+const grid = document.getElementById('grid');
+const countEl = document.getElementById('count');
+let activeFilter = 'all';
+let searchTerm = '';
+
+function getCardIngredients(recipe) {
+  return recipe.ingredients.slice(0, 4).map(i =>
+    `<li><span>${i.name}</span><span class="ing-amount">${i.amount}</span></li>`
+  ).join('') + (recipe.ingredients.length > 4 ? `<li style="color:var(--text-dim);font-style:italic">+${recipe.ingredients.length - 4} more…</li>` : '');
+}
+
+function render() {
+  const filtered = recipes.filter(r => {
+    const matchFilter = activeFilter === 'all' || r.tags.includes(activeFilter);
+    const q = searchTerm.toLowerCase();
+    const matchSearch = !q || r.name.toLowerCase().includes(q) ||
+      r.ingredients.some(i => i.name.toLowerCase().includes(q)) ||
+      r.spirit.toLowerCase().includes(q);
+    return matchFilter && matchSearch;
+  });
+
+  countEl.textContent = `${filtered.length} of ${recipes.length} recipes`;
+
+  grid.innerHTML = filtered.length === 0
+    ? `<div class="no-results">No cocktails match your search.</div>`
+    : filtered.map((r, i) => `
+      <div class="card" data-index="${recipes.indexOf(r)}" style="animation-delay:${i * 0.05}s">
+        <div class="card-top">
+          <div class="card-spirit">${r.spirit}</div>
+          <div class="card-name">${r.name}</div>
+        </div>
+        <div class="card-body">
+          <ul class="card-ingredients">${getCardIngredients(r)}</ul>
+          <div class="card-tags">${r.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+        </div>
+      </div>
+    `).join('');
+
+  grid.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('click', () => openModal(parseInt(card.dataset.index)));
+  });
+}
+
+// Modal
+const overlay = document.getElementById('modalOverlay');
+const mName = document.getElementById('mName');
+const mSpirit = document.getElementById('mSpirit');
+const mIngredients = document.getElementById('mIngredients');
+const mMethod = document.getElementById('mMethod');
+const mMethodWrap = document.getElementById('mMethodWrap');
+const mNotes = document.getElementById('mNotes');
+const mNotesWrap = document.getElementById('mNotesWrap');
+
+function openModal(idx) {
+  const r = recipes[idx];
+  mSpirit.textContent = r.spirit;
+  mName.textContent = r.name;
+  mIngredients.innerHTML = r.ingredients.map(i =>
+    `<li><span>${i.name}</span><span class="modal-amount">${i.amount}</span></li>`
+  ).join('');
+  if (r.method) {
+    mMethod.textContent = r.method;
+    mMethodWrap.style.display = 'block';
+  } else {
+    mMethodWrap.style.display = 'none';
+  }
+  if (r.notes) {
+    mNotes.textContent = r.notes;
+    mNotesWrap.style.display = 'block';
+  } else {
+    mNotesWrap.style.display = 'none';
+  }
+  overlay.classList.add('open');
+}
+
+document.getElementById('modalClose').addEventListener('click', () => overlay.classList.remove('open'));
+overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') overlay.classList.remove('open'); });
+
+document.getElementById('search').addEventListener('input', e => {
+  searchTerm = e.target.value;
+  render();
+});
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.filter;
+    render();
+  });
+});
+
+render();
+</script>
+</body>
+</html>
