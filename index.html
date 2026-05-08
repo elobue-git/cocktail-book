@@ -422,6 +422,7 @@
   <button class="filter-btn" data-filter="tiki">Tiki</button>
   <button class="filter-btn" data-filter="stirred">Stirred</button>
   <button class="filter-btn" data-filter="mezcal">Mezcal</button>
+  <button class="filter-btn" data-filter="vodka">Vodka</button>
 </div>
 
 <div class="grid" id="grid"></div>
@@ -1599,6 +1600,57 @@ const recipes = [
     ],
     method: "Stir all with ice. Strain into chilled coupe or Nick & Nora. Express orange peel if desired.",
     notes: "Negroni-adjacent — dry vermouth instead of sweet shifts it drier and more herbal, with the orange liqueur bridging the gap."
+  },
+  {
+    name: "Cosmopolitan",
+    spirit: "Vodka",
+    tags: ["vodka"],
+    ingredients: [
+      { amount: "1½ oz", name: "Citrus vodka" },
+      { amount: "1 oz", name: "Cointreau" },
+      { amount: "½ oz", name: "Fresh lime juice" },
+      { amount: "¼ oz", name: "Cranberry juice" }
+    ],
+    method: "Shake all with ice. Double-strain into chilled cocktail glass. Garnish with flamed orange peel.",
+    notes: "Via Death & Co. The definitive Cosmo — citrus vodka and a splash of cranberry for color, not sweetness. Flamed orange peel is the move."
+  },
+  {
+    name: "Moscow Mule",
+    spirit: "Vodka",
+    tags: ["vodka"],
+    ingredients: [
+      { amount: "2 oz", name: "Vodka" },
+      { amount: "½ oz", name: "Fresh lime juice" },
+      { amount: "4 oz", name: "Ginger beer" },
+      { amount: "to garnish", name: "Lime wheel & mint sprig" }
+    ],
+    method: "Build over ice in a copper mug. Add vodka and lime juice, top with ginger beer. Garnish.",
+    notes: "The classic. Copper mug keeps it cold and gives a faint metallic note. Use a spicy ginger beer (Fever-Tree or Bundaberg) for best results."
+  },
+  {
+    name: "Espresso Martini",
+    spirit: "Vodka",
+    tags: ["vodka"],
+    ingredients: [
+      { amount: "2 oz", name: "Vodka" },
+      { amount: "1 oz", name: "Coffee liqueur (Kahlúa)" },
+      { amount: "1 oz", name: "Fresh espresso (cooled)" },
+      { amount: "¼ oz", name: "Simple syrup" }
+    ],
+    method: "Shake all hard with ice. Double-strain into chilled coupe. The foam comes from a vigorous shake.",
+    notes: "Dick Bradsell's 1983 creation at Fred's Club, London. Fresh espresso (not cold brew) is essential for the crema-foam top. Shake hard and fast."
+  },
+  {
+    name: "White Russian",
+    spirit: "Vodka",
+    tags: ["vodka"],
+    ingredients: [
+      { amount: "2 oz", name: "Vodka" },
+      { amount: "1 oz", name: "Coffee liqueur (Kahlúa)" },
+      { amount: "1 oz", name: "Heavy cream" }
+    ],
+    method: "Build over ice in a rocks glass. Add vodka and Kahlúa, then float the cream by pouring gently over the back of a spoon.",
+    notes: "The Dude abides. Float the cream rather than mixing for a layered effect — stir as you drink. Go full fat for the richest result."
   }
 ];
 
