@@ -367,6 +367,21 @@
     white-space: nowrap;
   }
 
+  .card-subtitle {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-dim);
+    letter-spacing: 0;
+  }
+
+  .modal-subtitle {
+    font-size: 12px;
+    color: var(--gold-light);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
   .modal-method {
     font-size: 14px;
     color: var(--text-dim);
@@ -382,6 +397,31 @@
     border-left: 2px solid var(--gold);
     padding: 12px 16px;
     border-radius: 0 6px 6px 0;
+  }
+
+  .modal-steps {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .modal-steps li {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    display: flex;
+    gap: 12px;
+  }
+
+  .modal-steps li .step-num {
+    color: var(--gold);
+    font-weight: 600;
+    font-size: 13px;
+    min-width: 18px;
+    padding-top: 1px;
   }
 
   .no-results {
@@ -433,6 +473,7 @@
       <div>
         <div class="modal-spirit" id="mSpirit"></div>
         <div class="modal-name" id="mName"></div>
+        <div class="modal-subtitle" id="mSubtitle" style="display:none"></div>
       </div>
       <button class="modal-close" id="modalClose">×</button>
     </div>
@@ -442,6 +483,10 @@
       <div id="mMethodWrap" style="display:none">
         <div class="modal-section-label">Method</div>
         <p class="modal-method" id="mMethod"></p>
+      </div>
+      <div id="mStepsWrap" style="display:none">
+        <div class="modal-section-label">Steps</div>
+        <ol class="modal-steps" id="mSteps"></ol>
       </div>
       <div id="mNotesWrap" style="display:none">
         <div class="modal-section-label">Notes</div>
@@ -1325,16 +1370,22 @@ const recipes = [
   },
   {
     name: "French 75",
+    subtitle: "Party Batch",
     spirit: "Gin",
     tags: ["gin"],
     ingredients: [
-      { amount: "1 oz", name: "Gin" },
-      { amount: "½ oz", name: "Lemon juice" },
-      { amount: "½ oz", name: "Simple syrup" },
-      { amount: "3 oz", name: "Sparkling wine" }
+      { amount: "18.5 fl oz", name: "Gin" },
+      { amount: "9.3 fl oz", name: "Fresh lemon juice" },
+      { amount: "6.3 fl oz", name: "Simple syrup (1:1)" },
+      { amount: "25.5 fl oz", name: "Champagne or dry sparkling wine" }
     ],
-    method: "Shake gin, lemon, and syrup with ice. Strain into a flute. Top with sparkling wine.",
-    notes: "Via Flavor Camp. Named after the French 75mm artillery piece — light and effervescent but packs a punch."
+    steps: [
+      "Make simple syrup: Combine equal parts sugar and water over medium heat, stir until dissolved, then cool completely. You'll need 6.3 fl oz.",
+      "Juice lemons: Squeeze enough fresh lemons to yield 9.3 fl oz. Roughly 8–10 medium lemons. Strain out seeds and pulp.",
+      "Combine and bottle: Combine gin, lemon juice, and simple syrup in a clean 1L bottle. Shake or stir gently to combine. Seal and refrigerate until ready to serve.",
+      "Serve: Pour approximately 2.5 oz of the chilled mix into a champagne flute or coupe over ice. Top with about 2 oz champagne. Garnish with a lemon twist or cherry."
+    ],
+    notes: "The 1L bottle holds all the gin, lemon, and simple syrup. Each serving uses about 2.5 oz mix + 2 oz champagne, yielding about 12 drinks — perfectly timed with a 750ml bottle of bubbly. Keep the mix refrigerated; add champagne per glass, never to the whole batch, or it will go flat."
   },
   {
     name: "Tom Collins",
@@ -1740,7 +1791,7 @@ function render() {
       <div class="card" data-index="${recipes.indexOf(r)}" style="animation-delay:${i * 0.05}s">
         <div class="card-top">
           <div class="card-spirit">${r.spirit}</div>
-          <div class="card-name">${r.name}</div>
+          <div class="card-name">${r.name}${r.subtitle ? `<span class="card-subtitle"> — ${r.subtitle}</span>` : ''}</div>
         </div>
         <div class="card-body">
           <ul class="card-ingredients">${getCardIngredients(r)}</ul>
@@ -1757,10 +1808,13 @@ function render() {
 // Modal
 const overlay = document.getElementById('modalOverlay');
 const mName = document.getElementById('mName');
+const mSubtitle = document.getElementById('mSubtitle');
 const mSpirit = document.getElementById('mSpirit');
 const mIngredients = document.getElementById('mIngredients');
 const mMethod = document.getElementById('mMethod');
 const mMethodWrap = document.getElementById('mMethodWrap');
+const mSteps = document.getElementById('mSteps');
+const mStepsWrap = document.getElementById('mStepsWrap');
 const mNotes = document.getElementById('mNotes');
 const mNotesWrap = document.getElementById('mNotesWrap');
 
@@ -1768,6 +1822,12 @@ function openModal(idx) {
   const r = recipes[idx];
   mSpirit.textContent = r.spirit;
   mName.textContent = r.name;
+  if (r.subtitle) {
+    mSubtitle.textContent = r.subtitle;
+    mSubtitle.style.display = 'block';
+  } else {
+    mSubtitle.style.display = 'none';
+  }
   mIngredients.innerHTML = r.ingredients.map(i =>
     `<li><span>${i.name}</span><span class="modal-amount">${i.amount}</span></li>`
   ).join('');
@@ -1776,6 +1836,14 @@ function openModal(idx) {
     mMethodWrap.style.display = 'block';
   } else {
     mMethodWrap.style.display = 'none';
+  }
+  if (r.steps && r.steps.length) {
+    mSteps.innerHTML = r.steps.map((s, i) =>
+      `<li><span class="step-num">${i + 1}.</span><span>${s}</span></li>`
+    ).join('');
+    mStepsWrap.style.display = 'block';
+  } else {
+    mStepsWrap.style.display = 'none';
   }
   if (r.notes) {
     mNotes.textContent = r.notes;
